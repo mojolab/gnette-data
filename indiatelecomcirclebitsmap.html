@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Page Template</title>
+        <script type="text/javascript" src="./d3.js"></script>
+	<style type="text/css">
+			/* No style rules here yet */		
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+
+			//Width and height
+			var w = 1000;
+			var h = 1000;
+
+			//Define default path generator
+			//var path = d3.geo.path();
+   
+var projection = d3.geo.mercator()
+    .scale(8700)
+    .translate([-1580,1050])
+    .precision(.1);
+
+var path = d3.geo.path()
+    .projection(projection);
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+			//Load in GeoJSON data
+			d3.json("./indiatelecomcirclebits.json", function(json) {
+				
+				//Bind data and create one path per GeoJSON feature
+				svg.selectAll("path")
+				   .data(json.features)
+				   .enter()
+				   .append("path")
+				   .attr("d", path)
+				   .attr("fill","#666666")
+				   .on("mouseover", function(d) 
+				   {
+					d3.select(this).transition().duration(750).attr("fill","#555555")
+					//Get this bar's x/y values, then augment for the tooltip
+					var xPosition =  d3.mouse(this)[0]+10;
+					var yPosition =  d3.mouse(this)[1]+14;
+					console.log(d.properties['NAME_1'])
+					//Create the tooltip label
+					svg.append("text")
+					   .attr("id", "tooltip")
+					   .attr("x", xPosition)
+					   .attr("y", yPosition)
+					   .attr("text-anchor", "middle")
+					   .attr("font-family", "sans-serif")
+					   .attr("font-size", "11px")
+					   .attr("font-weight", "bold")
+					   .attr("fill", "black")
+					   .text(d.properties['NAME_1']);
+
+			   })
+			   .on("mouseout", function() {
+			   
+					//Remove the tooltip
+					d3.select("#tooltip").remove();
+					d3.select(this).transition().duration(750).attr("fill","#666666")
+					});
+		
+			});
+			
+		</script>
+	</body>
+</html>
