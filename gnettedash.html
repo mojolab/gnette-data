@@ -6,12 +6,11 @@
         <script type="text/javascript" src="./d3.js"></script>
 	<style type="text/css">
 		    #map {   
-				position: absolute;	
 				border-radius: 25px; 
 				padding: 10px;
-				width:1000px;
-				height:1000px; 
-				border:1px solid black;
+				width:800px;
+				height:800px; 
+				border:1px ;
 				font-family: "Arial", Arial, sans-serif
 			}
 
@@ -19,11 +18,11 @@
 
 			#data {    
 				position: absolute;			
-				text-align: center;			
-				width: 300px;					
-				height: 280px;					
-				padding: 2px;				
-				font: 12px sans-serif;		
+				text-align: left;			
+				width: 650px;					
+				height: 730px;					
+				padding: 30px;				
+				font: 18px sans-serif;		
 				background: lightsteelblue;	
 				border: 0px;		
 				border-radius: 8px;			
@@ -34,26 +33,42 @@
 	</head>
 	<body>
 		<div id="map"></div>
+		<div id="data"></div>
 		<script type="text/javascript"> 
-			var datadiv=d3.select("body")
-						.append("div")
-						.attr("id","data")
-						.style("opacity",0)
-						.style("display","none")
-						.on("click",function(){console.log("CLicked DATADIV")
-					});
+			var datadiv=d3.select("#data")
+			datadiv.style("opacity",0)
+			
+				
+			function toggleDataDiv(data=null){
+						
+						
+						console.log("showing data div")
+							console.log(data)
+							//showDataDiv(xPosition,yPosition)
+							var active   = datadiv.active ? false : true ,
+										newOpacity = active ? 0 : 1;
+							// Hide or show the elements
+							d3.select("#data").style("opacity", newOpacity).style("top", "10px").style("left","800px");
+							// Update whether or not the elements are active
+							datadiv.active = active;
+							datadiv.html("State Name: "+data['NAME_1']+"<br>"+"Telecom Circle: "+data['CIRCLEDISPNAME']+"<br>")
+						
+					}
+					
 			var w = 1000;
 			var h = 1000;
+			var closebutton=d3.select("#map").append("text").text("close datadiv").on("click",function(){console.log("clicked");toggleDataDiv()})
 			var svg = d3.select("#map")
 				.append("svg")
 				.attr("width", w)
 				.attr("height", h)
+				
 			
 
 			//Define default path generator
 			var projection = d3.geo.mercator()
-				.scale(8700)
-				.translate([-1580,1050])
+				.scale(8200)
+				.translate([-1480,910])
 				.precision(.1);
 		
 			var path = d3.geo.path()
@@ -63,11 +78,11 @@
 			
 			//Load in GeoJSON data
 			//Width and height
-			
+			var clicktog=0
 						
 			
 			function basemap(){
-				
+					
 				 d3.json("./indiatelecomcirclebitswithcirclename.json", function(json) {
 					//Bind data and create one path per GeoJSON feature
 					svg.selectAll("path")
@@ -77,7 +92,6 @@
 					   .attr("d", path)
 					   .attr("fill","#AAB050")
 					   .on("click",function(d){
-							datadiv.style("opacity",0)
 							
 							//d3.select("#data").remove()
 							var thiscircle=d.properties['CIRCLE']
@@ -88,12 +102,10 @@
 							d3.select(this).transition().duration(750).attr("fill","#CCCCCC")
 							var xPosition =  d3.event.pageX+100
 							var yPosition =  d3.event.pageY+100
-							console.log(xPosition+","+yPosition)
-							datadiv.style("top",yPosition+"px").style("left",xPosition+"px").style("opacity",1).style("display","block")
-							
+							toggleDataDiv(d.properties)
 						})
-						
 					   .on("mouseover", function(d) {
+							//hideDataDiv()
 							var thiscircle=d.properties['CIRCLE']
 							var otherstates=svg.selectAll("path").filter(function(e){
 								return e.properties['CIRCLE']==thiscircle;
@@ -123,15 +135,12 @@
 							d3.select(this).transition().duration(750).attr("fill","#AAB050")
 							d3.select("#tooltip").remove()
 							
-							
 						});
 				
 					});
-				//console.log(svg)
 					
 			}
 			basemap();
-			//console.log(svg)
 			
 		</script>
 	</body>
