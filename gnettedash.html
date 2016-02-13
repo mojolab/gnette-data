@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>India Telecom Data</title>
+        <script type="text/javascript" src="./d3.js"></script>
+	<style type="text/css">
+		    #map {    
+				border-radius: 25px; 
+				padding: 10px;
+				width:1000px;
+				height:1000px; 
+				border:1px solid black;
+				font-family: "Arial", Arial, sans-serif
+			}
+
+
+
+			#data {    
+				border-radius: 25px; 
+				padding: 20px;
+				position: absolute;
+				top:50px;
+				left:400px;
+				height:200px;
+				width:500px;
+				border:1px solid black;
+				font-family: "Arial", Arial, sans-serif
+			}
+			/* No style rules here yet */		
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+		<div id="data"></div>
+		<script type="text/javascript">
+         function map()
+         {
+			//Width and height
+			var w = 1000;
+			var h = 1000;
+
+			//Define default path generator
+			//var path = d3.geo.path();
+   
+			var projection = d3.geo.mercator()
+				.scale(8700)
+				.translate([-1580,1050])
+				.precision(.1);
+
+			var path = d3.geo.path()
+				.projection(projection);
+						//Create SVG element
+			var svg = d3.select("#map")
+				.append("svg")
+				.attr("width", w)
+				.attr("height", h);
+			var datadiv=d3.select("#data")
+
+			//Load in GeoJSON data
+			d3.json("./indiatelecomcirclebits.json", function(json) 
+			{
+				//Bind data and create one path per GeoJSON feature
+				svg.selectAll("path")
+				   .data(json.features)
+				   .enter()
+				   .append("path")
+				   .attr("d", path)
+				   .attr("fill","#AAB050")
+				   .on("click",function(d){
+					   d3.select("#datadiventry").remove();
+						datadiv.append("p")
+						.text(d.properties['NAME_1'])
+						.attr("id","datadiventry");
+				   })
+				   .on("mouseover", function(d) 
+				   {
+					console.log(d.properties['NAME_1'])
+					d3.select(this).transition().duration(750).attr("fill","#555555")
+					//Get this bar's x/y values, then augment for the tooltip
+					var xPosition =  d3.mouse(this)[0]+10;
+					var yPosition =  d3.mouse(this)[1]+14;
+					//Create the tooltip label
+					svg.append("text")
+					   .attr("id", "tooltip")
+					   .attr("x", xPosition)
+					   .attr("y", yPosition)
+					   .attr("text-anchor", "middle")
+					   .attr("font-family", "sans-serif")
+					   .attr("font-size", "11px")
+					   .attr("font-weight", "bold")
+					   .attr("fill", "black")
+					   .text(d.properties['NAME_1']);
+
+			   })
+			   .on("mouseout", function() {
+			   
+					//Remove the tooltip
+					d3.select("#tooltip").remove();
+					//d3.select("#datadiventry").remove();
+					
+					d3.select(this).transition().duration(750).attr("fill","#AAB050")
+					});
+		
+			});
+		}
+		map();
+		</script>
+	</body>
+</html>
