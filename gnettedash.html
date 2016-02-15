@@ -10,7 +10,7 @@
 				padding: 10px;
 				width:800px;
 				height:800px; 
-				border:1px ;
+				border:1px solid black;
 				font-family: "Arial", Arial, sans-serif
 			}
 
@@ -33,27 +33,10 @@
 	</head>
 	<body>
 		<div id="map"></div>
-		<div id="data"></div>
 		<script type="text/javascript"> 
-			var datadiv=d3.select("#data")
-			datadiv.style("opacity",0)
 			
 				
-			function toggleDataDiv(data=null){
-						
-						
-						console.log("showing data div")
-							console.log(data)
-							//showDataDiv(xPosition,yPosition)
-							var active   = datadiv.active ? false : true ,
-										newOpacity = active ? 0 : 1;
-							// Hide or show the elements
-							d3.select("#data").style("opacity", newOpacity).style("top", "10px").style("left","800px");
-							// Update whether or not the elements are active
-							datadiv.active = active;
-							datadiv.html("State Name: "+data['NAME_1']+"<br>"+"Telecom Circle: "+data['CIRCLEDISPNAME']+"<br>")
-						
-					}
+		
 					
 			var w = 1000;
 			var h = 1000;
@@ -63,12 +46,16 @@
 				.attr("width", w)
 				.attr("height", h)
 				
-			
-
-			//Define default path generator
+		/*		//Define default path generator
 			var projection = d3.geo.mercator()
 				.scale(8200)
 				.translate([-1480,910])
+				.precision(.1);*/
+
+			//Define default path generator
+			var projection = d3.geo.mercator()
+				.scale(1200)
+				.translate([-1300,850])
 				.precision(.1);
 		
 			var path = d3.geo.path()
