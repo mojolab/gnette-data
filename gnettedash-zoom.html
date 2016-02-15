@@ -5,6 +5,16 @@
         <title>India Telecom Data</title>
         <script type="text/javascript" src="./d3.js"></script>
 	<style type="text/css">
+		    
+		    .feature {
+  fill: #ccc;
+  cursor: pointer;
+}
+
+.feature.active {
+  fill: orange;
+}
+		    
 		    #map {   
 				border-radius: 25px; 
 				padding: 10px;
@@ -13,8 +23,6 @@
 				border:1px;
 				font-family: "Arial", Arial, sans-serif
 			}
-
-
 
 			#data {    
 				position: absolute;			
@@ -50,16 +58,7 @@
 		<script type="text/javascript"> 
 			
 			datadiv=d3.select("#data").style("opacity",0).on("click",toggleDataDiv)
-			function toggleDataDiv(d){
-				var active   = datadiv.active ? false : true,
-				newOpacity = active ? 0 : 1;
-				// Hide or show the element
-				datadiv.style("opacity", newOpacity);
-					// Update whether or not the element are active
-				datadiv.active = active;
-				console.log(datadiv.active)
-				datadiv.append("div").attr("id","data-inner")
-			}		
+			var active = d3.select(null);
 			var w = 1000;
 			var h = 1000;
 			var closebutton=d3.select("#map").append("text").text("close datadiv").on("click",function(){console.log("clicked");toggleDataDiv()})
@@ -68,6 +67,7 @@
 				.append("svg")
 				.attr("width", w)
 				.attr("height", h)
+				.on("click", stopped, true);
 			/*		
 			//Define default path generator
 			var projection = d3.geo.mercator()
@@ -80,6 +80,16 @@
 				.translate([-1300,850])
 				.precision(.1);
 			
+			var zoom = d3.behavior.zoom()
+						.scale(1)
+						.translate([0,0])
+						//.scaleExtent([1, 8])
+						.on("zoom", zoomed);
+
+			var g = svg.append("g");
+			svg
+			.call(zoom) // delete this line to disable free zooming
+			.call(zoom.event);
 			//Define default path generator
 			var path = d3.geo.path()
 				.projection(projection);
@@ -88,11 +98,14 @@
 			function basemap(){
 				 d3.json("./indiatelecomcirclebitswithcirclename.json", function(json) {
 					//Bind data and create one path per GeoJSON feature
-					svg.selectAll("path")
+					g.selectAll("path")
 					   .data(json.features)
 					   .enter()
 					   .append("path")
 					   .attr("d", path)
+					   .attr("class", "feature")
+					   .on("click", clicked);
+					   /*
 					   .attr("fill","#AAB050")
 					   .on("click",function(d){
 							//d3.select("#data").remove()
@@ -136,13 +149,65 @@
 							d3.select(this).transition().duration(750).attr("fill","#AAB050")
 							d3.select("#tooltip").remove()
 							
-						});
+						});*/
 				
 					});
-					
 			}
+			function clicked(d) {
+				var thiscircle=d.properties['CIRCLE']
+				var otherstates=svg.selectAll("path")
+									.filter(function(e){
+										return e.properties['CIRCLE']==thiscircle;
+									});
+				if (active.node() === this) return reset(otherstates);
+				active.classed("active", false);
+				active = d3.select(this).classed("active", true);
+				otherstates.classed("active",true)
+				var bounds = path.bounds(d),
+				  dx = bounds[1][0] - bounds[0][0],
+				  dy = bounds[1][1] - bounds[0][1],
+				  x = (bounds[0][0] + bounds[1][0]) / 2,
+				  y = (bounds[0][1] + bounds[1][1]) / 2,
+				  scale = .8 / Math.max(dx / w, dy / h),
+				  translate = [w / 2 - scale * x, h / 2 - scale * y];
+
+			  svg.transition()
+				  .duration(750)
+				  .call(zoom.translate(translate).scale(scale).event);
+			}
+
+			function reset(otherstates) {
+			  otherstates.classed("active",false)
+			  active.classed("active", false);
+			  active = d3.select(null);
+
+			  svg.transition()
+				  .duration(750)
+				  .call(zoom.translate([0,0]).scale(1).event);
+			}
+
+			function zoomed() {
+			  g.style("stroke-width", 1.5 / d3.event.scale + "px");
+			  g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+			}
+
+			// If the drag behavior prevents the default click,
+			// also stop propagation so we don’t click-to-zoom.
+			function stopped() {
+			  if (d3.event.defaultPrevented) d3.event.stopPropagation();
+			}
+						
+			function toggleDataDiv(d){
+				var active   = datadiv.active ? false : true,
+				newOpacity = active ? 0 : 1;
+				// Hide or show the element
+				datadiv.style("opacity", newOpacity);
+					// Update whether or not the element are active
+				datadiv.active = active;
+				console.log(datadiv.active)
+				datadiv.append("div").attr("id","data-inner")
+			}	
 			basemap();
-			
 		</script>
 	</body>
 </html>
