@@ -7,14 +7,14 @@
 	<style type="text/css">
 		    
 		    .feature {
-  fill: #ccc;
-  cursor: pointer;
-}
+				fill: #ccc;
+				cursor: pointer;
+				}
 
-.feature.active {
-  fill: orange;
-}
-		    
+			.feature.active {
+			  fill: orange;
+			}
+						
 		    #map {   
 				border-radius: 25px; 
 				padding: 10px;
@@ -38,6 +38,20 @@
 				border-radius: 8px;			
 				/*pointer-events: none*/
 			}
+			
+			#reset{
+				position: absolute;			
+				text-align: left;			
+				top: 0px
+				left: 0px
+				width: 30px;					
+				height: 20px;					
+				padding: 5px;				
+				font: 8px sans-serif;		
+				background: lightblue;	
+				border: 0px;		
+				border-radius: 8px;			
+				cursor: pointer
 			#data-inner{
 				position: absolute;			
 				text-align: left;			
@@ -59,9 +73,10 @@
 			
 			datadiv=d3.select("#data").style("opacity",0).on("click",toggleDataDiv)
 			var active = d3.select(null);
-			var w = 1000;
-			var h = 1000;
-			var closebutton=d3.select("#map").append("text").text("close datadiv").on("click",function(){console.log("clicked");toggleDataDiv()})
+			var circlestates = d3.select(null);
+			var w = 700;
+			var h = 700;
+			var closebutton=d3.select("#map").append("div").attr("id","reset").html("Reset").on("click",function(){console.log("clicked");datadiv.style("opacity",0);reset(circlestates)})
 			//Create SVG element
 			var svg = d3.select("#map")
 				.append("svg")
@@ -76,8 +91,8 @@
 				.precision(.1);
 			*/
 			var projection = d3.geo.mercator()
-				.scale(1200)
-				.translate([-1300,850])
+				.scale(1150)
+				.translate([-1300,800])
 				.precision(.1);
 			
 			var zoom = d3.behavior.zoom()
@@ -104,7 +119,7 @@
 					   .append("path")
 					   .attr("d", path)
 					   .attr("class", "feature")
-					   .on("click", clicked);
+					   .on("click", clicked)
 					   /*
 					   .attr("fill","#AAB050")
 					   .on("click",function(d){
@@ -117,15 +132,9 @@
 							otherstates.transition().duration(750).attr("fill","#CCCCCC")
 							d3.select(this).transition().duration(750).attr("fill","#CCCCCC")
 							toggleDataDiv(d.properties)
-						})
+						})*/
 					   .on("mouseover", function(d) {
 							//hideDataDiv()
-							var thiscircle=d.properties['CIRCLE']
-							var otherstates=svg.selectAll("path").filter(function(e){
-								return e.properties['CIRCLE']==thiscircle;
-							});
-							otherstates.transition().duration(750).attr("fill","#BBBBBB")
-							d3.select(this).transition().duration(750).attr("fill","#BBBBBB")
 							var xPosition =  d3.mouse(this)[0]+10;
 							var yPosition =  d3.mouse(this)[1]+14;
 							//Create the tooltip label
@@ -141,28 +150,23 @@
 								.text(d.properties['NAME_1']);
 						})
 					   .on("mouseout", function(d){
-						   var thiscircle=d.properties['CIRCLE']
-							var otherstates=svg.selectAll("path").filter(function(e){
-								return e.properties['CIRCLE']==thiscircle;
-							});
-							otherstates.transition().duration(750).attr("fill","#AAB050")
-							d3.select(this).transition().duration(750).attr("fill","#AAB050")
-							d3.select("#tooltip").remove()
+						   d3.select("#tooltip").remove()
 							
-						});*/
+						});
 				
 					});
 			}
 			function clicked(d) {
+				if (active.node() === this ) return reset(circlestates);
+				circlestates.classed("active",false);
 				var thiscircle=d.properties['CIRCLE']
-				var otherstates=svg.selectAll("path")
+				circlestates=svg.selectAll("path")
 									.filter(function(e){
 										return e.properties['CIRCLE']==thiscircle;
 									});
-				if (active.node() === this) return reset(otherstates);
 				active.classed("active", false);
-				active = d3.select(this).classed("active", true);
-				otherstates.classed("active",true)
+				active=d3.select(this).classed("active", true);
+				circlestates.classed("active",true)
 				var bounds = path.bounds(d),
 				  dx = bounds[1][0] - bounds[0][0],
 				  dy = bounds[1][1] - bounds[0][1],
@@ -176,9 +180,10 @@
 				  .call(zoom.translate(translate).scale(scale).event);
 			}
 
-			function reset(otherstates) {
-			  otherstates.classed("active",false)
+			function reset(circlestates) {
 			  active.classed("active", false);
+			  console.log(circlestates) 
+			  circlestates.classed("active",false);
 			  active = d3.select(null);
 
 			  svg.transition()
@@ -189,6 +194,7 @@
 			function zoomed() {
 			  g.style("stroke-width", 1.5 / d3.event.scale + "px");
 			  g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+			  //drawPoints()
 			}
 
 			// If the drag behavior prevents the default click,
@@ -207,7 +213,21 @@
 				console.log(datadiv.active)
 				datadiv.append("div").attr("id","data-inner")
 			}	
-			basemap();
+			function drawPoints(){
+				d3.csv("./gsm.csv",function(csv){
+					console.log(csv[0])
+					g.selectAll("circle")
+					.data(csv).enter()
+					.append("circle")
+					.attr("cx", function (d) { console.log(projection([d['lon'],d['lat']])); return projection([d['lon'],d['lat']])[0]; })
+					.attr("cy", function (d) { return projection([d['lon'],d['lat']])[1]; })
+					.attr("r", "5px")
+					.attr("fill", "red")
+					});
+				}
+		
+		basemap();
+		drawPoints();
 		</script>
 	</body>
 </html>
